@@ -68,7 +68,7 @@ async function classifyTicket(complaint, userType, evidenceVerdict, matchedTxnId
             throw new Error(`Gemini API Error: ${data.error?.message || response.statusText}`);
         }
 
-        // Catch Google Native Safety Blocks to prevent crashes
+        // Catch Google Native Safety Blocks to prevent 500 crashes
         if (!data.candidates || !data.candidates[0].content) {
             console.warn("⚠️ Gemini natively blocked the prompt! Defaulting to fraud_risk.");
             return {
@@ -82,8 +82,7 @@ async function classifyTicket(complaint, userType, evidenceVerdict, matchedTxnId
             };
         }
 
-        const jsonString = data.candidates[0].content.parts[0].text;
-        return JSON.parse(jsonString);
+        return JSON.parse(data.candidates[0].content.parts[0].text);
 
     } catch (error) {
         console.error("AI Error:", error);
