@@ -1,76 +1,69 @@
 // matcher.js
 
 /**
- * Extracts potential amounts from a text string.
- * Looks for digits, ignoring commas (e.g., "5000", "5,000").
+ * Converts Bangla digits to English digits so our regex can read them.
  */
+function convertBanglaToEnglish(text) {
+    const banglaDigits = {'০':'0','১':'1','২':'2','৩':'3','৪':'4','৫':'5','৬':'6','৭':'7','৮':'8','৯':'9'};
+    return text.replace(/[০-৯]/g, char => banglaDigits[char]);
+}
+
 function extractNumbers(text) {
-    const regex = /\b\d+(?:,\d+)*\b/g;
-    const matches = text.match(regex);
+    const englishText = convertBanglaToEnglish(text);
+    // Removed \b boundary to prevent issues with non-latin spaces
+    const regex = /\d+(?:,\d+)*/g; 
+    const matches = englishText.match(regex);
     return matches ? matches.map(num => parseFloat(num.replace(/,/g, ''))) : [];
 }
 
-/**
- * Analyzes the ticket and transaction history to determine the evidence verdict.
- */
 function analyzeEvidence(complaint, transactionHistory) {
-    // If there's no history, we instantly have insufficient data (common for phishing reports)
     if (!transactionHistory || transactionHistory.length === 0) {
-        return {
-            relevant_transaction_id: null,
-            evidence_verdict: "insufficient_data"
-        };
+        return { relevant_transaction_id: null, evidence_verdict: "insufficient_data" };
     }
 
     const mentionedNumbers = extractNumbers(complaint);
     
-    // Filter history to find transactions that match ANY number mentioned in the complaint
-    // We check both the transaction amount and the counterparty (like a phone number)
     const plausibleMatches = transactionHistory.filter(txn => {
         const hasAmountMatch = mentionedNumbers.includes(txn.amount);
-        const hasCounterpartyMatch = complaint.includes(txn.counterparty.replace('+88', '')); // Strip country code for matching
-        
+        const hasCounterpartyMatch = complaint.includes(txn.counterparty.replace('+88', ''));
         return hasAmountMatch || hasCounterpartyMatch;
     });
 
     // Case 1: No matches found
     if (plausibleMatches.length === 0) {
-        return {
-            relevant_transaction_id: null,
-            evidence_verdict: "insufficient_data"
-        };
+        return { relevant_transaction_id: null, evidence_verdict: "insufficient_data" };
     }
 
-    // Case 2: Exactly one match (The ideal scenario)
+    // Case 2: Exactly one match
     if (plausibleMatches.length === 1) {
         const matchedTxn = plausibleMatches[0];
         
-        // Let's do a basic consistency check. 
-        // If they complain about a "failed" transaction, but the system says "completed", it's inconsistent.
-        const complaintImpliesFailure = /fail|didn't get|not received|error/i.test(complaint);
-        
+        // Added Bangla keywords (আসেনি, পাইনি, ভুল) to make the rule engine multilingual!
+        const complaintImpliesFailure = /fail|didn't get|not received|error|আসেনি|পাইনি|যায়নি/i.test(complaint);
         let verdict = "consistent";
+        
         if (complaintImpliesFailure && matchedTxn.status === "completed") {
-            // Wait, if it's a wrong transfer, it SHOULD be completed.
-            const isWrongTransfer = /wrong|mistake/i.test(complaint);
-            if (!isWrongTransfer) {
-                verdict = "inconsistent";
-            }
+            const isWrongTransfer = /wrong|mistake|ভুল/i.test(complaint);
+            if (!isWrongTransfer) verdict = "inconsistent";
         }
-
-        return {
-            relevant_transaction_id: matchedTxn.transaction_id,
-            evidence_verdict: verdict
-        };
+        return { relevant_transaction_id: matchedTxn.transaction_id, evidence_verdict: verdict };
     }
 
-    // Case 3: Multiple matches (Ambiguity)
-    // E.g., The customer says "my 1000 taka transfer failed" but they made three 1000 taka transfers today.
-    // The manual explicitly states to return insufficient_data here instead of guessing.
-    return {
-        relevant_transaction_id: null,
-        evidence_verdict: "insufficient_data"
-    };
+    // Case 3: Multiple matches (Duplicate check)
+    if (plausibleMatches.length > 1) {
+        const firstMatch = plausibleMatches[0];
+        const isDuplicate = plausibleMatches.every(txn => txn.amount === firstMatch.amount && txn.counterparty === firstMatch.counterparty);
+
+        if (isDuplicate) {
+            plausibleMatches.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            return {
+                relevant_transaction_id: plausibleMatches[0].transaction_id, 
+                evidence_verdict: "consistent"
+            };
+        }
+
+        return { relevant_transaction_id: null, evidence_verdict: "insufficient_data" };
+    }
 }
 
 module.exports = { analyzeEvidence };
