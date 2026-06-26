@@ -5,62 +5,11 @@
   "case_type": "wrong_transfer",
   "severity": "high",
   "department": "dispute_resolution",
-  "agent_summary": "Customer mistakenly transferred 5000 Taka to an incorrect mobile number and is requesting assistance to recover the funds.",
-  "recommended_next_action": "Initiate a wrong transfer investigation, attempt to contact the recipient, and if unsuccessful, proceed with a formal recovery request.",
-  "customer_reply": "Dear Customer, We understand your concern regarding the 5000 Taka transfer to an incorrect number. We have initiated an investigation into this transaction. Please allow us some time to review the details and take the necessary steps. We will notify you of the outcome through official channels, and any eligible amount will be returned accordingly.",
+  "agent_summary": "Customer reports sending 5000 BDT via TXN-9101 to a wrong number around 2pm today. The intended recipient was 01712345678. The customer states the recipient is not responding and requests help to get their money back.",
+  "recommended_next_action": "Verify TXN-9101 details with the customer and initiate the wrong-transfer dispute workflow per policy.",
+  "customer_reply": "We have noted your concern about transaction TXN-9101. Our dispute team will review the case and contact you through official support channels. Please do not share your PIN or OTP with anyone.",
   "human_review_required": true,
-  "confidence": 0.85,
-  "reason_codes": [
-    "hybrid_analysis_complete"
-  ]
-}
-
-{
-  "ticket_id": "TKT-002",
-  "relevant_transaction_id": "TXN-9202",
-  "evidence_verdict": "consistent",
-  "case_type": "wrong_transfer",
-  "severity": "high",
-  "department": "dispute_resolution",
-  "agent_summary": "Customer mistakenly sent 2000 to an incorrect recipient and requests a reversal.",
-  "recommended_next_action": "Initiate a trace for the incorrect transfer and contact the recipient's bank for potential recovery. Inform customer about the process and timelines.",
-  "customer_reply": "We understand your concern regarding the recent transfer to an incorrect recipient. We have initiated an investigation into this transaction. Please note that while we will do our best to assist, reversals are not guaranteed and depend on various factors. We will keep you updated on the progress through official channels.",
-  "human_review_required": true,
-  "confidence": 0.85,
-  "reason_codes": [
-    "hybrid_analysis_complete"
-  ]
-}
-
-{
-  "ticket_id": "TKT-003",
-  "relevant_transaction_id": "TXN-9301",
-  "evidence_verdict": "consistent",
-  "case_type": "payment_failed",
-  "severity": "medium",
-  "department": "payments_ops",
-  "agent_summary": "Customer reported a failed mobile recharge transaction where their balance was deducted despite the app showing failure. They are requesting a refund.",
-  "recommended_next_action": "Initiate a transaction trace for the reported mobile recharge payment to verify the status and determine if the amount was successfully processed by the merchant or if it's stuck in an intermediate state. If stuck, process a reversal.",
-  "customer_reply": "Dear Customer, We understand your concern regarding the failed mobile recharge transaction where your balance was deducted. We are actively investigating this issue to determine the status of your payment. Please allow us some time to complete our review. Any eligible amount will be returned through official channels once the investigation is complete. We appreciate your patience.",
-  "human_review_required": true,
-  "confidence": 0.85,
-  "reason_codes": [
-    "hybrid_analysis_complete"
-  ]
-}
-
-{
-  "ticket_id": "TKT-003",
-  "relevant_transaction_id": "TXN-9301",
-  "evidence_verdict": "consistent",
-  "case_type": "payment_failed",
-  "severity": "medium",
-  "department": "payments_ops",
-  "agent_summary": "Customer reported a failed mobile recharge transaction where their balance was deducted despite the app showing failure. They are requesting a refund.",
-  "recommended_next_action": "Initiate a transaction trace for the reported mobile recharge payment to verify the status and determine if the amount was successfully processed by the merchant or if it's stuck in an intermediate state. If stuck, process a reversal.",
-  "customer_reply": "Dear Customer, We understand your concern regarding the failed mobile recharge transaction where your balance was deducted. We are actively investigating this issue to determine the status of your payment. Please allow us some time to complete our review. Any eligible amount will be returned through official channels once the investigation is complete. We appreciate your patience.",
-  "human_review_required": true,
-  "confidence": 0.85,
+  "confidence": 0.9,
   "reason_codes": [
     "hybrid_analysis_complete"
   ]
