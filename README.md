@@ -1,28 +1,27 @@
-# QueueStorm Investigator
+# QueueStorm Investigator API
 
-An AI-powered, safety-first support copilot built for the SUST CSE Carnival 2026.
+## Architectural Overview
+This service utilizes a **Hybrid (Rule + AI) Architecture** to ensure mathematically accurate reasoning combined with flexible natural language generation. 
+1. **Rule-Based Engine (`matcher.js`):** Extracts evidence, handles Bangla numerals natively, cross-references transaction history, and strictly determines the `relevant_transaction_id` and `evidence_verdict`. It is mathematically restricted from hallucinating transaction IDs.
+2. **Generative AI (`ai.js`):** Drafts the summary, categorizes the severity/department, and drafts the customer reply.
+3. **Safety Interceptor (`safety.js`):** A strict regex-based firewall that scans AI outputs before transmission.
 
-##  Setup & Run Instructions
+## AI Model Used
+* **Model:** Google `gemini-2.5-flash`
+* **Justification:** Chosen for its extremely low p95 latency (scoring full performance points) and its native support for `responseMimeType: "application/json"`, which guarantees strict adherence to the required API schema.
+
+## Safety Logic & Escalation
+Financial safety is enforced via a two-layer defense:
+1. **Prompt Engineering:** The model is strictly instructed to never request PIN/OTP/Passwords, and to use authorized language ("any eligible amount will be returned").
+2. **Hard Interceptor:** `safety.js` scans the drafted response. If it detects phrases like "tell me your PIN" or "we will refund you", it overrides the AI's response with safe, hardcoded text and immediately changes the `recommended_next_action` to escalate the ticket for human review due to a safety violation.
+
+## Known Limitations
+* **Rate Limiting:** The service currently runs on a free-tier Gemini API key, which limits requests per minute. Rapid, concurrent automated testing may trigger a temporary 500 error due to upstream rate limiting. 
+* **Strict Schema Firewall:** The API aggressively rejects malformed inputs (missing `ticket_id` or `complaint`) with a 400 Bad Request to prioritize stability over graceful guessing.
+
+## Setup & Execution
 1. Clone the repository.
-2. Run `npm install` to install dependencies.
-3. Set your environment variable:
-   - Create a `.env` file.
-   - Add `GEMINI_API_KEY=your_api_key`.
-4. Run the server: `npm start`
-5. The API will bind to `0.0.0.0` and be available on port `8000`.
-
-##  Architecture & Flow (Hybrid Rule + AI)
-1. **Schema Firewall (Zod):** Inbound requests are validated against strict types and enums to prevent schema-related crashes.
-2. **Deterministic Matcher (JavaScript):** A heuristic engine extracts amounts and counterparties from the complaint, cross-referencing them against the transaction history to programmatically determine the `relevant_transaction_id` and `evidence_verdict`.
-3. **AI Classifier (Gemini API):** The complaint text and matcher evidence are passed to Gemini via a constrained prompt to classify the case type, department, severity, and draft the summary.
-4. **Safety Interceptor:** The AI's drafted response is scanned. If forbidden terms (PIN, OTP, refund promises) are detected, the response is overridden with a mathematically safe string.
-
-##  Models Used
-- **Model:** `gemini-2.5-flash` via Google AI Studio.
-- **Why:** Selected for its high-speed execution, large context window, and native `responseMimeType: "application/json"` enforcement.
-
-##  Safety Logic
-- A secondary regex-based middleware (`safety.js`) acts as a hard fail-safe against LLM hallucinations. It explicitly intercepts and neutralizes unauthorized refund promises or credential requests.
-
-##  Known Limitations
-- The heuristic matcher relies on extracting numbers from the text. Vague complaints lacking transaction details will default to `insufficient_data`.
+2. Run `npm install` to install dependencies (Express, Zod, etc.).
+3. Create a `.env` file and add `GEMINI_API_KEY=your_key_here` and `PORT=8000`.
+4. Run `npm start`.
+5. The API will be available at `POST http://localhost:8000/analyze-ticket` and `GET http://localhost:8000/health`.
